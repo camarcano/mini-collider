@@ -20,9 +20,11 @@ mini-collider/
 ├── README.md                  ← you are here
 ├── build/                     the physical model
 │   ├── BUILD_GUIDE.md            START HERE — how to build the board
+│   ├── board_plan.svg            what you are building, drawn to scale
 │   ├── parts_list.md             shopping list, ~£48
 │   ├── SAFETY.md                 read before you build
-│   └── layout_template.html      print at 100% → board plan + labels
+│   ├── layout_template.html      print at 100% → board plan + labels
+│   └── 3dprint/                  optional printed parts + printable STLs
 ├── presentation/
 │   ├── index.html                14 slides — arrows to move, F for fullscreen
 │   └── KIDS_SCRIPT.md            who says what, and the questions to expect
@@ -42,8 +44,11 @@ mini-collider/
    online order plus a trip to a hardware shop covers it.
 3. **Build Level 1 only, first.** It is a weekend, and it is what you will
    actually take to the fair. Levels 2–5 are optional extras.
-4. **Practise the presentation** with `presentation/KIDS_SCRIPT.md`.
-5. **Put `simulation/index.html` on the laptop** you will take, and try it
+4. **Have a 3D printer?** The parts in `build/3dprint/` are optional but
+   worthwhile — they make the tube clips, the coil winding and the launch much
+   easier. The build works with no printer at all.
+5. **Practise the presentation** with `presentation/KIDS_SCRIPT.md`.
+6. **Put `simulation/index.html` on the laptop** you will take, and try it
    full-screen before the day.
 
 ---

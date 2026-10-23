@@ -19,13 +19,24 @@ marketplace. Nothing here is specialist except the ball bearings and the wire.
 | 9 | Aluminium foil tape | | 1 roll | 4 | For the impact switch; ordinary kitchen foil + PVA also works |
 | 10 | Clear plastic cup or bottle | 250 ml | 1 | 0 | The detector |
 | 11 | Coloured beads | 6–8 mm, mixed | 1 bag | 3 | The "new particles" |
-| 12 | Cable clips | 12–16 mm, nail-in or adhesive | 40 | 4 | Holds the tube to the board |
+| 12 | Cable clips | 12–16 mm, nail-in or adhesive | 40 | 4 | Holds the tube to the board — or print them: see `3dprint/` |
 | 13 | Masking tape | | 1 roll | 2 | The most-used tool in the whole build |
 | 14 | Hot glue sticks | | 6 | 3 | |
 | 15 | Wedge / batten | 2 × 4 timber offcut, ~15 cm | 1 | 0 | Sets the tilt |
 | 16 | Sticky labels + marker pens | | — | 3 | Labelling the machine is the highest-value 15 minutes of the build |
 | 17 | Lining paper + felt tips | | — | 2 | Kids decorate the board |
 | | | | **Total** | **~£48** | |
+
+## 3D printed parts (optional)
+
+If you have a printer, six small parts replace the fiddliest bits of the
+build — the tube clips, the coil winding, and the simultaneous launch. They
+need about 200 g of PLA and **nothing in the list above changes**: the clips
+replace the cable clips (item 12), and everything else is an upgrade rather
+than a substitution.
+
+See [`3dprint/PRINTED_PARTS.md`](3dprint/PRINTED_PARTS.md) for the files,
+the settings, and how to tune the fit.
 
 ## Tools
 

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-70 -90 940 780" font-family="Helvetica, Arial, sans-serif">
+  <!-- Board plan, 1 unit = 1 mm. Board is 800 x 600 (80 x 60 cm), tilted 15-22 deg. -->
+  <rect x="-70" y="-90" width="940" height="780" fill="#fbfaf7"/>
+  <rect x="0" y="0" width="800" height="600" fill="#f2ecdd" stroke="#c9c2ae" stroke-width="3"/>
+
+  <!-- tube stubs poking past the top edge (the injection point) -->
+  <path d="M 60,-40 C 55,-15 50,0 48,10" fill="none" stroke="#9fc6b4" stroke-width="16" stroke-linecap="round"/>
+  <path d="M 740,-40 C 745,-15 750,0 752,10" fill="none" stroke="#9fc6b4" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- the two mirrored beam pipes: always downhill, never back up the board -->
+  <path d="M 48,10 C 40,90 26,220 40,330 C 55,440 200,470 330,500 C 355,506 380,512 400,520"
+        fill="none" stroke="#9fc6b4" stroke-width="16" stroke-linecap="round"/>
+  <path d="M 752,10 C 760,90 774,220 760,330 C 745,440 600,470 470,500 C 445,506 420,512 400,520"
+        fill="none" stroke="#9fc6b4" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- kicker magnet coils -->
+  <ellipse cx="37" cy="130" rx="17" ry="10" fill="none" stroke="#0f7b4f" stroke-width="4"/>
+  <ellipse cx="763" cy="130" rx="17" ry="10" fill="none" stroke="#0f7b4f" stroke-width="4"/>
+
+  <!-- detector cup with beads -->
+  <circle cx="400" cy="520" r="38" fill="#fff" stroke="#16211c" stroke-width="4"/>
+  <g fill="#d8a13a">
+    <circle cx="388" cy="512" r="4"/><circle cx="402" cy="508" r="4"/><circle cx="414" cy="516" r="4"/>
+    <circle cx="394" cy="526" r="4"/><circle cx="410" cy="530" r="4"/><circle cx="384" cy="532" r="4"/>
+  </g>
+  <circle cx="400" cy="520" r="7" fill="#16211c"/>
+
+  <!-- labels -->
+  <g font-size="17" fill="#16211c">
+    <text x="60" y="-58" font-weight="bold">INJECTION POINT</text>
+    <text x="620" y="-58" font-weight="bold">INJECTION POINT</text>
+    <text x="62" y="140" fill="#0f7b4f" font-weight="bold">KICKER MAGNET</text>
+    <text x="560" y="140" fill="#0f7b4f" font-weight="bold">KICKER MAGNET</text>
+    <text x="20" y="300" fill="#6b7269">BEAM A &#8595;</text>
+    <text x="690" y="300" fill="#6b7269">&#8595; BEAM B</text>
+    <text x="400" y="588" text-anchor="middle" font-weight="bold">DETECTOR</text>
+    <text x="400" y="465" text-anchor="middle" fill="#6b7269">new particles &#8593;</text>
+  </g>
+  <g stroke="#6b7269" stroke-width="1.5" fill="none" stroke-dasharray="5 4">
+    <path d="M 40,470 L 400,600"/>
+    <path d="M 760,470 L 400,600"/>
+  </g>
+
+  <!-- dimensions -->
+  <g stroke="#0f7b4f" stroke-width="2" fill="#0f7b4f">
+    <path d="M 0,640 L 800,640" />
+    <path d="M 0,634 L 0,646 M 800,634 L 800,646" />
+    <path d="M 850,0 L 850,600"/>
+    <path d="M 844,0 L 856,0 M 844,600 L 856,600"/>
+  </g>
+  <g font-size="18" fill="#0f7b4f" font-weight="bold">
+    <text x="400" y="668" text-anchor="middle">80 cm</text>
+    <text x="872" y="300" transform="rotate(90 872 300)" text-anchor="middle">60 cm</text>
+  </g>
+  <text x="-58" y="330" font-size="17" fill="#6b7269" transform="rotate(-90 -58 330)">
+    wedge under the top edge &#8594; tilt 15&#8211;22&#176;</text>
+  <text x="-58" y="-60" font-size="15" fill="#6b7269">both tubes stick 15 cm past the top edge</text>
+  <text x="400" y="-72" text-anchor="middle" font-size="19" font-weight="bold" fill="#16211c">
+    The Colliderscope &#8212; board plan (top view)</text>
+</svg>

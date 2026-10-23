@@ -28,6 +28,11 @@ runs. No installs, no internet, no accounts.
     <span>Two steel-ball beams, two hand-wound electromagnets, one crash in the
     detector cup. About &pound;48 and a weekend.</span>
   </a>
+  <a class="card" href="build/3dprint/PRINTED_PARTS.html">
+    <strong>&#128421; Print the parts</strong>
+    <span>Six small optional parts for the tube clips, the coil winding and the
+    launch. No printer? Skip this &mdash; the build works without.</span>
+  </a>
   <a class="card" href="docs/science_notes.html">
     <strong>&#128218; Read the physics</strong>
     <span>The real machine in numbers, and an honest account of what our model
@@ -41,6 +46,7 @@ runs. No installs, no internet, no accounts.
 |---|---|
 | [Start here](start-here/) | The whole project on one page — the project README |
 | [Build guide](build/BUILD_GUIDE.html) | The 8-step build, the honesty table, troubleshooting, and the 5-minute stand routine |
+| [Printed parts](build/3dprint/PRINTED_PARTS.html) | Six optional STLs: clips, coil winder, launch gates, funnel, detector rings |
 | [Parts list](build/parts_list.html) | 17 items, ~&pound;48, AA batteries only |
 | [Safety notes](build/SAFETY.html) | Read before you build; print one for the box |
 | [Board template](build/layout_template.html) | Print at 100% — board plan and labels to cut out |
