@@ -1,0 +1,12 @@
+# GitHub Pages config. Jekyll builds this site on GitHub's servers, so no
+# local tooling is needed. The default GitHub Pages plugins render every .md
+# file as a page, use README.md semantics, and rewrite relative links — the
+# markdown deliverables stay untouched.
+title: MiniCollider
+description: A table-top particle collider for STEM week, by three Year 4 children
+url: https://camarcano.github.io
+baseurl: "/mini-collider"
+
+# The deliverables are written in GitHub-flavoured markdown (pipe tables,
+# task lists), so build them with the matching renderer.
+markdown: GFM

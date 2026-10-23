@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.title | default: site.title | escape }}</title>
+  <style>
+    :root {
+      --ink: #16211c;
+      --paper: #fbfaf7;
+      --accent: #0f7b4f;
+      --accent-soft: #e6f2ec;
+      --line: #e2ded4;
+      --muted: #6b7269;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    nav { background: #0d1712; padding: 0.7rem 1rem; }
+    nav .inner {
+      max-width: 46rem; margin: 0 auto; display: flex; flex-wrap: wrap;
+      gap: 0.35rem 1rem; align-items: center;
+    }
+    nav a { color: #cfe6d9; text-decoration: none; font-size: 0.92rem; }
+    nav a:hover { color: #fff; text-decoration: underline; }
+    nav .brand { font-weight: 700; color: #fff; margin-right: 0.5rem; }
+    main { max-width: 46rem; margin: 0 auto; padding: 2.2rem 1.25rem 4rem; }
+    h1, h2, h3 { line-height: 1.25; }
+    h1 { font-size: 2rem; margin: 0 0 1rem; }
+    h2 { font-size: 1.4rem; margin-top: 2.2rem; padding-bottom: 0.3rem;
+         border-bottom: 2px solid var(--accent-soft); }
+    h3 { font-size: 1.12rem; margin-top: 1.6rem; }
+    a { color: var(--accent); }
+    code {
+      background: #f0eee7; border: 1px solid var(--line); border-radius: 4px;
+      padding: 0.1rem 0.35rem; font-size: 0.88em;
+    }
+    pre {
+      background: #0d1712; color: #e7f0ea; padding: 1rem 1.1rem;
+      border-radius: 8px; overflow-x: auto;
+    }
+    pre code { background: none; border: 0; color: inherit; padding: 0; font-size: 0.85em; }
+    /* Several deliverables are wide tables; keep them usable on a phone. */
+    table {
+      display: block; width: 100%; overflow-x: auto;
+      border-collapse: collapse; font-size: 0.94rem; margin: 1.2rem 0;
+    }
+    th, td { border: 1px solid var(--line); padding: 0.5rem 0.65rem;
+             text-align: left; vertical-align: top; }
+    th { background: var(--accent-soft); }
+    tbody tr:nth-child(even) { background: #f6f4ee; }
+    blockquote {
+      margin: 1.2rem 0; padding: 0.2rem 1.1rem; border-left: 4px solid var(--accent);
+      background: var(--accent-soft); border-radius: 0 6px 6px 0;
+    }
+    hr { border: 0; border-top: 1px solid var(--line); margin: 2.5rem 0; }
+    .grid {
+      display: grid; gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: 1.5rem 0;
+    }
+    .card {
+      display: block; padding: 1rem 1.1rem; border: 1px solid var(--line);
+      border-left: 4px solid var(--accent); border-radius: 8px;
+      text-decoration: none; color: var(--ink); background: #fff;
+    }
+    .card:hover { background: var(--accent-soft); }
+    .card strong { display: block; color: var(--accent); margin-bottom: 0.25rem; }
+    .card span { font-size: 0.93rem; color: var(--muted); }
+    .foot {
+      margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line);
+      font-size: 0.88rem; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <nav><div class="inner">
+    <span class="brand">&#127905; MiniCollider</span>
+    <a href="{{ site.baseurl }}/">Home</a>
+    <a href="{{ site.baseurl }}/build/BUILD_GUIDE.html">Build guide</a>
+    <a href="{{ site.baseurl }}/presentation/">Slides</a>
+    <a href="{{ site.baseurl }}/simulation/">Simulation</a>
+    <a href="{{ site.baseurl }}/docs/science_notes.html">Science notes</a>
+  </div></nav>
+  <main>
+    {{ content }}
+    <p class="foot">Built by three Year 4 children and one grown-up for STEM week.
+       Every file here also works offline — download it and it just runs.</p>
+  </main>
+</body>
+</html>
