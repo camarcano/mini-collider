@@ -6,16 +6,21 @@ that a family with no printer can build the whole thing. If you do have a
 printer, these six parts remove the three fiddliest jobs: gripping the tube,
 winding the coils, and firing both beams at the same moment.
 
+**Download:** everything in one file —
+[`colliderscope_parts.zip`](stl/colliderscope_parts.zip) (26 KB, all six
+parts, ready to drop into your slicer). Or take them individually below.
+Each `.stl` downloads when you click it.
+
 ## The parts
 
-| File | What it is | Print | Helps step |
+| Download | What it is | Print | Helps step |
 |---|---|---|---|
-| `stl/track_clip.stl` | Saddle clip that holds the tube to the board. Tape or glue the foot down. | ~30 | Step 3 |
-| `stl/coil_mandrel.stl` | Slides inside the tube; the hex end chucks into a drill. Winds a 200-turn coil in twenty seconds instead of twenty minutes. | 1 | Step 4 |
-| `stl/ball_gate.stl` | Launch gate for one beam: ball rests in the cradle, a shutter across its path holds it. | 2 | Step 5 |
-| `stl/gate_shutter.stl` | The shutter that slides out to fire. Print two, tie a string between the two tabs, and **one pull fires both beams together**. | 2 | Step 5 |
-| `stl/catch_funnel.stl` | Flared ring over the detector cup. Balls that bounce hit the slope and fall back in; the beads stay put. | 1 | Step 6 |
-| `stl/detector_rings.stl` | Three rings the children paint: tracker, calorimeter, muon chambers. The real detector really is built in concentric layers. | 1 (all three in one file) | Step 6 |
+| [track_clip.stl](stl/track_clip.stl) | Saddle clip that holds the tube to the board. Tape or glue the foot down. | ~30 | Step 3 |
+| [coil_mandrel.stl](stl/coil_mandrel.stl) | Slides inside the tube; the hex end chucks into a drill. Winds a 200-turn coil in twenty seconds instead of twenty minutes. | 1 | Step 4 |
+| [ball_gate.stl](stl/ball_gate.stl) | Launch gate for one beam: ball rests in the cradle, a shutter across its path holds it. | 2 | Step 5 |
+| [gate_shutter.stl](stl/gate_shutter.stl) | The shutter that slides out to fire. Print two, tie a string between the two tabs, and **one pull fires both beams together**. | 2 | Step 5 |
+| [catch_funnel.stl](stl/catch_funnel.stl) | Flared ring over the detector cup. Balls that bounce hit the slope and fall back in; the beads stay put. | 1 | Step 6 |
+| [detector_rings.stl](stl/detector_rings.stl) | Three rings the children paint: tracker, calorimeter, muon chambers. The real detector really is built in concentric layers. | 1 (all three in one file) | Step 6 |
 
 The printed parts replace about **200 g of PLA — a few pounds of filament**.
 Nothing here needs a large bed: the biggest single piece is 110 mm across.
@@ -58,7 +63,8 @@ Everything is parametric. Edit the block at the top of
 python3 generate_stls.py
 ```
 
-It rewrites every STL in `stl/`. The numbers that matter:
+It rewrites every STL in `stl/`, and rebuilds the zip bundle to match. The
+numbers that matter:
 
 | Parameter | Default | Meaning |
 |---|---|---|

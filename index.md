@@ -31,7 +31,8 @@ runs. No installs, no internet, no accounts.
   <a class="card" href="build/3dprint/PRINTED_PARTS.html">
     <strong>&#128421; Print the parts</strong>
     <span>Six small optional parts for the tube clips, the coil winding and the
-    launch. No printer? Skip this &mdash; the build works without.</span>
+    launch &mdash; downloadable as one zip. No printer? Skip this &mdash; the
+    build works without.</span>
   </a>
   <a class="card" href="docs/science_notes.html">
     <strong>&#128218; Read the physics</strong>

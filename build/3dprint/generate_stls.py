@@ -253,6 +253,16 @@ def write_stl(name, m):
     return path
 
 
+def write_zip(paths):
+    """Bundle every STL into one file, so the whole set is a single download."""
+    import zipfile
+    path = os.path.join(OUT, "colliderscope_parts.zip")
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        for p in paths:
+            z.write(p, os.path.basename(p))
+    return path
+
+
 # --------------------------------------------------------------------------
 # The parts
 # --------------------------------------------------------------------------
@@ -379,6 +389,7 @@ PARTS = [
 
 
 def main():
+    written = []
     for name, builder, blurb in PARTS:
         subs = builder()
         for sub in subs:
@@ -388,9 +399,11 @@ def main():
         for i, sub in enumerate(subs):
             m.add(sub, offset=(0, 140.0 * i, 0))   # lay multi-part files side by side
         path = write_stl(name, m)
+        written.append(path)
         x, y, z = bbox(m)
         print(f"{name:16s} {len(m.f):5d} tris  {x:6.1f} x {y:6.1f} x {z:5.1f} mm  "
               f"{signed_volume(m) / 1000:7.2f} cm3   {os.path.basename(path)}  ({blurb})")
+    print(f"bundle: {os.path.basename(write_zip(written))}")
 
 
 if __name__ == "__main__":
