@@ -39,7 +39,7 @@ runs. No installs, no internet, no accounts.
 
 | Deliverable | What it is |
 |---|---|
-| [README](README.html) | Start here — the whole project on one page |
+| [Start here](start-here/) | The whole project on one page — the project README |
 | [Build guide](build/BUILD_GUIDE.html) | The 8-step build, the honesty table, troubleshooting, and the 5-minute stand routine |
 | [Parts list](build/parts_list.html) | 17 items, ~&pound;48, AA batteries only |
 | [Safety notes](build/SAFETY.html) | Read before you build; print one for the box |

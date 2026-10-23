@@ -1,3 +1,11 @@
+---
+# Pages: an explicit permalink keeps README out of the way of index.md,
+# which the readme-index plugin would otherwise claim or drop.
+layout: default
+title: Start here
+permalink: /start-here/
+---
+
 # MiniCollider 🎡⚛️
 
 A school project: **build a tiny model of a particle collider, present it, and
