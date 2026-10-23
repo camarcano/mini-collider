@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colliderscope — board layout template</title>
+<style>
+  :root { --ink:#0b0b0b; --ink2:#52514e; --muted:#898781; --line:#e1e0d9; --blue:#2a78d6; --orange:#eb6834; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); margin: 0; padding: 24px; background:#fcfcfb; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  p { font-size: 14px; line-height: 1.5; color: var(--ink2); max-width: 72ch; margin: 6px 0; }
+  ol { font-size: 14px; color: var(--ink2); max-width: 72ch; }
+  .sheet { background: #fff; border: 1px solid var(--line); padding: 16px; margin-top: 18px; }
+  svg { width: 100%; height: auto; display: block; }
+  .note { font-size: 13px; color: var(--muted); }
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print {
+    body { padding: 0; background: #fff; }
+    .screenonly { display: none; }
+    .sheet { border: 0; padding: 0; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+<h1>Colliderscope — board layout template</h1>
+<p class="screenonly">Print this page at <strong>100% scale</strong> (A4 landscape, “no scaling”, no headers).
+Then copy the grid onto your board square by square.</p>
+
+<div class="sheet">
+  <p><strong>How to use this</strong></p>
+  <ol>
+    <li>Print at 100%. Every square on this plan is <strong>10 cm × 10 cm</strong> on your real board,
+        so the plan fits an <strong>80 cm × 60 cm</strong> board.</li>
+    <li>Rule a pencil grid of 10 cm squares onto the board (or onto lining paper stuck to it) and
+        letter it the same way: columns <strong>A–H</strong>, rows <strong>1–6</strong>.</li>
+    <li>Copy the two grey lines square by square. A child can do this — it is like copying a picture
+        from a grid, which they do in art lessons.</li>
+    <li>The <strong>grey line is the middle of the tube</strong>. The tube is 16 mm across, so leave
+        about 1 cm of space either side of your line.</li>
+    <li>Drop a ball on the line and check it rolls the whole way <em>before</em> you fix any tube down.</li>
+  </ol>
+
+  <svg viewBox="-10 -40 820 700" role="img" aria-label="Plan of the collider board: a grid of 10 centimetre squares, with two mirrored sweeping beam pipes from the top corners down to a detector cup at the bottom centre.">
+    <!-- column letters -->
+    <g font-family="system-ui,sans-serif" font-size="18" font-weight="700" fill="#898781" text-anchor="middle">
+      <text x="50" y="-12">A</text><text x="150" y="-12">B</text><text x="250" y="-12">C</text><text x="350" y="-12">D</text>
+      <text x="450" y="-12">E</text><text x="550" y="-12">F</text><text x="650" y="-12">G</text><text x="750" y="-12">H</text>
+    </g>
+    <!-- row numbers -->
+    <g font-family="system-ui,sans-serif" font-size="18" font-weight="700" fill="#898781" text-anchor="end">
+      <text x="-6" y="56">1</text><text x="-6" y="156">2</text><text x="-6" y="256">3</text>
+      <text x="-6" y="356">4</text><text x="-6" y="456">5</text><text x="-6" y="556">6</text>
+    </g>
+    <!-- grid -->
+    <g stroke="#e1e0d9" stroke-width="1">
+      <path d="M0 0 H800 M0 100 H800 M0 200 H800 M0 300 H800 M0 400 H800 M0 500 H800 M0 600 H800"/>
+      <path d="M0 0 V600 M100 0 V600 M200 0 V600 M300 0 V600 M400 0 V600 M500 0 V600 M600 0 V600 M700 0 V600 M800 0 V600"/>
+    </g>
+    <rect x="0" y="0" width="800" height="600" fill="none" stroke="#0b0b0b" stroke-width="2"/>
+
+    <!-- centreline between the mirrored halves -->
+    <path d="M400 0 V600" stroke="#eb6834" stroke-width="1" stroke-dasharray="6 6" opacity="0.6"/>
+    <text x="400" y="622" font-family="system-ui,sans-serif" font-size="14" fill="#898781" text-anchor="middle">fold line — the two sides must match</text>
+
+    <!-- BEAM A (blue, left) -->
+    <path d="M70 30 C 250 110, 120 210, 95 300 C 72 385, 150 455, 245 470 C 300 479, 340 500, 372 512"
+          fill="none" stroke="#2a78d6" stroke-width="16" stroke-linecap="round" opacity="0.28"/>
+    <path d="M70 30 C 250 110, 120 210, 95 300 C 72 385, 150 455, 245 470 C 300 479, 340 500, 372 512"
+          fill="none" stroke="#2a78d6" stroke-width="2" stroke-dasharray="8 6"/>
+
+    <!-- BEAM B (orange, right) — mirror image -->
+    <path d="M730 30 C 550 110, 680 210, 705 300 C 728 385, 650 455, 555 470 C 500 479, 460 500, 428 512"
+          fill="none" stroke="#eb6834" stroke-width="16" stroke-linecap="round" opacity="0.28"/>
+    <path d="M730 30 C 550 110, 680 210, 705 300 C 728 385, 650 455, 555 470 C 500 479, 460 500, 428 512"
+          fill="none" stroke="#eb6834" stroke-width="2" stroke-dasharray="8 6"/>
+
+    <!-- detector cup -->
+    <circle cx="400" cy="520" r="46" fill="none" stroke="#0b0b0b" stroke-width="3"/>
+    <circle cx="400" cy="520" r="7" fill="#0b0b0b"/>
+    <text x="400" y="596" font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#0b0b0b" text-anchor="middle">DETECTOR  (cup ⌀ 9 cm)</text>
+
+    <!-- injection points -->
+    <g font-family="system-ui,sans-serif" font-size="15" font-weight="700" fill="#52514e">
+      <text x="70" y="16" text-anchor="middle">injection A</text>
+      <text x="730" y="16" text-anchor="middle">injection B</text>
+    </g>
+    <rect x="52" y="20" width="36" height="26" rx="6" fill="none" stroke="#2a78d6" stroke-width="2"/>
+    <rect x="712" y="20" width="36" height="26" rx="6" fill="none" stroke="#eb6834" stroke-width="2"/>
+    <text x="70" y="72" font-family="system-ui,sans-serif" font-size="14" fill="#2a78d6" text-anchor="middle">kicker magnet here</text>
+    <text x="730" y="72" font-family="system-ui,sans-serif" font-size="14" fill="#eb6834" text-anchor="middle">kicker magnet here</text>
+
+    <!-- board tilt arrow -->
+    <g font-family="system-ui,sans-serif" font-size="14" fill="#898781">
+      <text x="20" y="300" transform="rotate(-90 20 300)" text-anchor="middle">top of board — raised on a wedge, 15–22°</text>
+    </g>
+  </svg>
+
+  <p class="note">The two pipes are mirror images of each other. That symmetry is not decoration:
+  identical tracks are what makes the two balls arrive at the detector at the same moment, so they
+  actually collide instead of arriving one after the other.</p>
+  <p class="note">If a test ball stalls anywhere on the line, flatten that section out. Straighter
+  and steeper beats curvy and clever — every time.</p>
+</div>
+
+<div class="sheet">
+  <h1 style="font-size:20px">Labels to cut out and tape on</h1>
+  <p>Print this page again, cut the boxes out, and tape them onto the board. A model with labels on
+  it explains itself, which is the difference between a toy and a demonstration.</p>
+  <svg viewBox="0 0 800 300" role="img" aria-label="Printable labels for the model.">
+    <g font-family="system-ui,sans-serif" font-weight="700" text-anchor="middle">
+      <g>
+        <rect x="10"   y="10" width="185" height="60" rx="10" fill="#fff" stroke="#0b0b0b" stroke-width="2"/>
+        <text x="102"  y="46" font-size="20" fill="#0b0b0b">INJECTION POINT</text>
+        <rect x="205"  y="10" width="185" height="60" rx="10" fill="#fff" stroke="#0b0b0b" stroke-width="2"/>
+        <text x="297"  y="46" font-size="20" fill="#0b0b0b">KICKER MAGNET</text>
+        <rect x="400"  y="10" width="185" height="60" rx="10" fill="#fff" stroke="#0b0b0b" stroke-width="2"/>
+        <text x="492"  y="46" font-size="20" fill="#0b0b0b">BEAM PIPE</text>
+        <rect x="595"  y="10" width="185" height="60" rx="10" fill="#fff" stroke="#0b0b0b" stroke-width="2"/>
+        <text x="687"  y="46" font-size="20" fill="#0b0b0b">DETECTOR</text>
+        <rect x="10"   y="80" width="185" height="60" rx="10" fill="#fff" stroke="#2a78d6" stroke-width="2"/>
+        <text x="102"  y="116" font-size="20" fill="#2a78d6">BEAM A  →</text>
+        <rect x="205"  y="80" width="185" height="60" rx="10" fill="#fff" stroke="#eb6834" stroke-width="2"/>
+        <text x="297"  y="116" font-size="20" fill="#eb6834">← BEAM B</text>
+        <rect x="400"  y="80" width="185" height="60" rx="10" fill="#fff" stroke="#0b0b0b" stroke-width="2"/>
+        <text x="492"  y="110" font-size="17" fill="#0b0b0b">NEW PARTICLES</text>
+        <text x="492"  y="130" font-size="13" fill="#898781">made out of pure energy</text>
+        <rect x="595"  y="80" width="185" height="60" rx="10" fill="#fff" stroke="#0b0b0b" stroke-width="2"/>
+        <text x="687"  y="110" font-size="17" fill="#0b0b0b">COLLISION POINT</text>
+        <text x="687"  y="130" font-size="13" fill="#898781">handle with excitement</text>
+      </g>
+    </g>
+    <g font-family="system-ui,sans-serif" font-size="15" fill="#52514e">
+      <text x="10" y="180">Two spiral tubes. One launch button. Two steel-ball protons race in opposite directions and</text>
+      <text x="10" y="202">crash in the detector cup. The coloured beads that fly out are the new particles — energy</text>
+      <text x="10" y="224">turning into matter, exactly as Einstein said: E = mc².</text>
+      <text x="10" y="262" font-weight="700" fill="#0b0b0b">Collisions so far: __________</text>
+    </g>
+  </svg>
+</div>
+
+</body>
+</html>

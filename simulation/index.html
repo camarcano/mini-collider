@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniCollider — particle collider simulation</title>
+<meta name="description" content="A hands-on particle collider simulation: steer two beams with magnets, charge them up with RF kicks, and smash them at the detector.">
+<style>
+/* ------------------------------------------------------------------ *
+ *  MiniCollider — design tokens (reference palette, dark surface)     *
+ *  Beam A = blue (series 1), Beam B = orange (series 2).              *
+ *  Validated: adjacent CVD dE 26.8 / normal 31.8 on #1a1a19.          *
+ * ------------------------------------------------------------------ */
+:root {
+  color-scheme: dark;
+  --page:            #0d0d0d;
+  --surface-1:       #1a1a19;
+  --text-primary:    #ffffff;
+  --text-secondary:  #c3c2b7;
+  --text-muted:      #898781;
+  --gridline:        #2c2c2a;
+  --baseline:        #383835;
+  --border:          rgba(255,255,255,0.10);
+  --beam-a:          #3987e5;   /* series 1 — beam A */
+  --beam-b:          #d95926;   /* series 2 — beam B */
+  --accent:          #3987e5;
+  --good:            #0ca30c;
+  --warning:         #fab219;
+  --serious:         #ec835a;
+  --critical:        #d03b3b;
+  --p-hadron:        #199e70;
+  --p-muon:          #9085e9;
+  --p-electron:      #c98500;
+  --p-photon:        #f2f1ea;
+  --p-neutrino:      #898781;
+  --radius:          10px;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: light) {
+  :root:where(:not([data-theme])) {
+    color-scheme: light;
+    --page:            #f9f9f7;
+    --surface-1:       #fcfcfb;
+    --text-primary:    #0b0b0b;
+    --text-secondary:  #52514e;
+    --text-muted:      #898781;
+    --gridline:        #e1e0d9;
+    --baseline:        #c3c2b7;
+    --border:          rgba(11,11,11,0.10);
+    --beam-a:          #2a78d6;
+    --beam-b:          #eb6834;
+    --accent:          #2a78d6;
+    --p-hadron:        #1baf7a;
+    --p-muon:          #4a3aa7;
+    --p-electron:      #eda100;
+    --p-photon:        #3a3a38;
+    --p-neutrino:      #898781;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--page);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1440px; margin: 0 auto; padding: 18px 22px 40px; }
+
+/* ---------- header ---------- */
+header.top {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 16px;
+}
+h1 { font-size: 24px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+h1 .beam-a-key, h1 .beam-b-key { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin: 0 5px 3px; }
+h1 .beam-a-key { background: var(--beam-a); }
+h1 .beam-b-key { background: var(--beam-b); }
+header .sub { color: var(--text-secondary); font-size: 14px; }
+header .spacer { flex: 1 1 auto; }
+
+/* ---------- layout ---------- */
+.layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(340px, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+}
+
+/* ---------- stage ---------- */
+.stage { position: relative; }
+#ring { display: block; width: 100%; height: auto; aspect-ratio: 1 / 0.86; touch-action: manipulation; }
+.stage .runstate {
+  position: absolute; left: 16px; top: 14px;
+  font-size: 13px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 7px;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+.dot.on { background: var(--good); }
+.factbox {
+  margin-top: 12px; padding: 12px 14px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--surface-1);
+  font-size: 14px; color: var(--text-secondary);
+}
+.factbox strong { color: var(--text-primary); font-weight: 600; }
+.factbox .k { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+
+/* ---------- stat tiles ---------- */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px 11px;
+}
+.tile.hero { grid-column: 1 / -1; }
+.tile .label { font-size: 12px; color: var(--text-secondary); letter-spacing: 0.01em; }
+.tile .value { font-size: 30px; font-weight: 600; line-height: 1.15; margin-top: 2px; }
+.tile.hero .value { font-size: 44px; }
+.tile .unit { font-size: 15px; font-weight: 500; color: var(--text-secondary); margin-left: 4px; }
+.tile .note { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* ---------- controls ---------- */
+.controls h2, .panel-h { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600; margin: 0 0 10px; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+button {
+  font-family: inherit; font-size: 15px; font-weight: 600;
+  padding: 10px 16px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: transparent; color: var(--text-primary);
+  min-height: 44px;
+}
+button:hover { background: rgba(255,255,255,0.06); }
+@media (prefers-color-scheme: light) { button:hover { background: rgba(11,11,11,0.05); } }
+button:focus-visible, input:focus-visible, .chart-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--beam-a); border-color: transparent; color: #fff; }
+button.primary:hover { filter: brightness(1.08); background: var(--beam-a); }
+button.smash { background: var(--beam-b); border-color: transparent; color: #fff; flex: 1 1 auto; }
+button.smash:hover { filter: brightness(1.08); background: var(--beam-b); }
+
+.field { margin: 0 0 14px; }
+.field .fhead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.field label { font-size: 14px; color: var(--text-primary); font-weight: 550; }
+.field output { font-size: 13px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; margin: 8px 0 0; accent-color: var(--accent); height: 28px; }
+.hint { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; }
+
+.checkrow { display: flex; align-items: center; gap: 9px; font-size: 14px; margin: 4px 0 14px; }
+.checkrow input { width: 17px; height: 17px; accent-color: var(--accent); }
+
+/* magnet meter — fill carries severity; track is a lighter step of the same ramp */
+.meter { margin-top: 8px; }
+.meter .mlabel { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 5px; }
+.meter .track { position: relative; height: 10px; border-radius: 5px; background: color-mix(in oklab, var(--accent) 22%, var(--surface-1)); overflow: hidden; }
+.meter .fill { position: absolute; inset: 0 auto 0 0; width: 40%; border-radius: 5px; background: var(--accent); transition: width 120ms linear; }
+.meter.warn .fill { background: var(--warning); }
+.meter.warn .track { background: color-mix(in oklab, var(--warning) 22%, var(--surface-1)); }
+.meter.crit .fill { background: var(--critical); }
+.meter.crit .track { background: color-mix(in oklab, var(--critical) 22%, var(--surface-1)); }
+.meter .mstate { display: flex; gap: 7px; align-items: center; font-size: 13px; margin-top: 6px; color: var(--text-secondary); }
+.meter .mstate .ico { font-weight: 700; }
+.meter.warn .mstate { color: var(--warning); }
+.meter.crit .mstate { color: var(--critical); }
+
+/* ---------- chart ---------- */
+figure.chart { margin: 0; }
+figure.chart figcaption { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+figure.chart .chartsub { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 8px; }
+.legend .item { display: inline-flex; align-items: center; gap: 6px; }
+.legend .key { width: 14px; height: 2px; border-radius: 1px; }
+.legend .key.a { background: var(--beam-a); }
+.legend .key.b { background: var(--beam-b); }
+.chartbox { position: relative; }
+#energychart { display: block; width: 100%; height: 216px; }
+.chart-hit { position: absolute; inset: 0; background: transparent; border: 0; cursor: crosshair; min-height: 0; padding: 0; }
+.chart-hit:hover { background: transparent; }
+.tooltip {
+  position: absolute; pointer-events: none; z-index: 3;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 10px; font-size: 12.5px; box-shadow: 0 4px 14px rgba(0,0,0,0.28);
+  white-space: nowrap; display: none;
+}
+.tooltip .t { color: var(--text-muted); margin-bottom: 4px; }
+.tooltip .row { display: flex; align-items: center; gap: 7px; }
+.tooltip .row .key { width: 12px; height: 2px; border-radius: 1px; }
+.tooltip .row .v { font-weight: 650; font-variant-numeric: tabular-nums; }
+.tooltip .row .n { color: var(--text-secondary); }
+.tablewrap { max-height: 216px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+table.data { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.data th, table.data td { text-align: right; padding: 5px 10px; font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--gridline); }
+table.data th { position: sticky; top: 0; background: var(--surface-1); color: var(--text-secondary); font-weight: 600; }
+table.data th:first-child, table.data td:first-child { text-align: left; }
+.linkbtn { font-size: 13px; font-weight: 600; padding: 5px 10px; min-height: 0; border-radius: 6px; }
+.keyrow { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--text-secondary); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--gridline); }
+.keyrow .item { display: inline-flex; align-items: center; gap: 6px; }
+.keyrow .swatch { width: 9px; height: 9px; border-radius: 50%; }
+.keyrow .swatch.dash { border-radius: 1px; background: repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 6px); background-color: transparent !important; }
+
+/* ---------- log ---------- */
+.log { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.log li { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--gridline); color: var(--text-secondary); }
+.log li:last-child { border-bottom: 0; }
+.log .num { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; min-width: 4.2em; }
+.log .empty { color: var(--text-muted); border: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+footer { margin-top: 22px; font-size: 12.5px; color: var(--text-muted); text-align: center; }
+.sr-only-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>MiniCollider<span class="beam-a-key" aria-hidden="true"></span><span class="beam-b-key" aria-hidden="true"></span></h1>
+    <span class="sub">Two beams · opposite ways · one big crash</span>
+    <span class="spacer"></span>
+    <label class="checkrow" style="margin:0">
+      <input type="checkbox" id="optSound">
+      <span>Sound</span>
+    </label>
+  </header>
+
+  <div class="layout">
+
+    <!-- ==================== LEFT: the machine ==================== -->
+    <section class="stage card" aria-label="The accelerator ring">
+      <div class="runstate"><span class="dot" id="runDot"></span><span id="runText">Paused — press Start</span></div>
+      <canvas id="ring" width="900" height="774" aria-label="Drawing of the accelerator ring. Two beams of particles travel in opposite directions past bending magnets and radio-frequency cavities, and collide at the detector at the top."></canvas>
+      <div class="factbox">
+        <span class="k">Did you know</span>
+        <span id="fact">The beams cross <strong>inside the detector</strong>. Everywhere else they pass straight through each other without touching — like two crowds walking past in opposite directions.</span>
+      </div>
+    </section>
+
+    <!-- ==================== RIGHT: panel ==================== -->
+    <aside class="panel" aria-label="Controls and readouts">
+
+      <div class="tiles">
+        <div class="tile hero">
+          <div class="label">Beam energy</div>
+          <div class="value"><span id="tEnergy">450</span><span class="unit" id="tEnergyUnit">GeV</span></div>
+          <div class="note">energy of one proton in the beam</div>
+        </div>
+        <div class="tile">
+          <div class="label">Speed</div>
+          <div class="value"><span id="tSpeed">99.99</span><span class="unit">% light speed</span></div>
+          <div class="note" id="tSpeedNote">almost as fast as anything can go</div>
+        </div>
+        <div class="tile">
+          <div class="label">Collisions</div>
+          <div class="value" id="tColl">0</div>
+          <div class="note" id="tCollNote">at the detector</div>
+        </div>
+        <div class="tile">
+          <div class="label">Beam losses</div>
+          <div class="value" id="tLoss">0</div>
+          <div class="note">protons that flew off the ring</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h2 class="panel-h">Controls</h2>
+        <div class="btnrow">
+          <button class="primary" id="btnRun" aria-keyshortcuts="Space">Start</button>
+          <button class="smash" id="btnSmash" aria-keyshortcuts="C">Collide now!</button>
+          <button id="btnReset" aria-keyshortcuts="R">Reset</button>
+        </div>
+
+        <div class="field">
+          <div class="fhead">
+            <label for="sMag">Bending magnet strength</label>
+            <output id="oMag" for="sMag">100%</output>
+          </div>
+          <input type="range" id="sMag" min="10" max="100" step="1" value="100"
+                 aria-describedby="magHint">
+          <div class="hint" id="magHint">The magnets bend the beam round the ring. Faster protons need stronger magnets.</div>
+          <div class="meter" id="magMeter">
+            <div class="mlabel"><span>Magnets needed for this beam</span><span id="magNeedTxt">64%</span></div>
+            <div class="track"><div class="fill" id="magFill"></div></div>
+            <div class="mstate" id="magState"><span class="ico" aria-hidden="true">✓</span><span id="magStateTxt">Magnets are strong enough</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="fhead">
+            <label for="sRF">RF power <span style="font-weight:400;color:var(--text-muted)">(the energy kick)</span></label>
+            <output id="oRF" for="sRF">80%</output>
+          </div>
+          <input type="range" id="sRF" min="0" max="100" step="1" value="80">
+          <div class="hint">Radio waves inside the RF cavities give the protons a push every time they go past.</div>
+        </div>
+
+        <div class="field">
+          <div class="fhead">
+            <label for="sN">Particles per beam</label>
+            <output id="oN" for="sN">12</output>
+          </div>
+          <input type="range" id="sN" min="4" max="24" step="1" value="12">
+        </div>
+
+        <label class="checkrow">
+          <input type="checkbox" id="optReal">
+          <span>Real LHC numbers (TeV, 9 digits of speed)</span>
+        </label>
+        <label class="checkrow">
+          <input type="checkbox" id="optLabels" checked>
+          <span>Label the parts of the machine</span>
+        </label>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <figure class="chart">
+          <figcaption id="chartTitle">Beam energy as it charges up</figcaption>
+          <div class="chartsub">GeV per proton · last 60 seconds</div>
+          <div class="legend" aria-hidden="true">
+            <span class="item"><span class="key a"></span>Beam A (clockwise)</span>
+            <span class="item"><span class="key b"></span>Beam B (anticlockwise)</span>
+          </div>
+          <div class="chartbox">
+            <svg id="energychart" viewBox="0 0 520 216" role="img" aria-labelledby="chartTitle" preserveAspectRatio="none"></svg>
+            <button class="chart-hit" id="chartHit" aria-label="Read values from the energy chart. Use left and right arrow keys to move along the timeline."></button>
+            <div class="tooltip" id="chartTip" role="status"></div>
+          </div>
+          <div id="tableView" class="tablewrap" hidden></div>
+          <div style="margin-top:8px;display:flex;justify-content:flex-end">
+            <button class="linkbtn" id="btnTable" aria-pressed="false">Table view</button>
+          </div>
+        </figure>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h2 class="panel-h">Collision log</h2>
+        <ul class="log" id="log">
+          <li class="empty">No collisions yet — press <strong>Collide now!</strong></li>
+        </ul>
+        <div class="keyrow" aria-hidden="true">
+          <span class="item"><span class="swatch" style="background:var(--p-hadron)"></span>hadron</span>
+          <span class="item"><span class="swatch" style="background:var(--p-muon)"></span>muon</span>
+          <span class="item"><span class="swatch" style="background:var(--p-electron)"></span>electron</span>
+          <span class="item"><span class="swatch" style="background:var(--p-photon)"></span>photon</span>
+          <span class="item"><span class="swatch dash" style="color:var(--p-neutrino)"></span>neutrino (escapes unseen)</span>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <footer>
+    Built for our STEM week demonstration · no internet needed, works offline ·
+    <kbd>Space</kbd> start/pause · <kbd>C</kbd> collide · <kbd>R</kbd> reset
+  </footer>
+</div>
+
+<p class="sr-only-live" id="live" aria-live="polite"></p>
+<noscript><div class="wrap"><div class="card">This simulation needs JavaScript switched on.</div></div></noscript>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =================================================================
+   *  0. Setup & constants
+   * ================================================================= */
+  var $ = function (id) { return document.getElementById(id); };
+
+  var E_INJECT = 450;      // GeV — the real LHC injection energy
+  var E_MAX    = 7000;     // GeV — a bit above the real 6.8 TeV beams
+  var M_PROTON = 0.938;    // GeV — proton rest energy
+  var SAMPLE_EVERY = 0.25; // s  — chart sample interval
+  var WINDOW_S     = 60;   // s  — chart time window
+  var DETECTOR_ANGLE = -Math.PI / 2;   // detector sits at the top
+
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var FACTS = [
+    "The beams cross <strong>inside the detector</strong>. Everywhere else they pass straight through each other without touching — like two crowds walking past in opposite directions.",
+    "The LHC ring is <strong>27 km round</strong> — that's about 27,000 laps of a running track — and it is buried 100 m under the ground near Geneva.",
+    "The magnets are cooled to <strong>−271 °C</strong>. That is colder than space, so the magnets can be superconducting and carry huge currents with no resistance.",
+    "<strong>E = mc²</strong> — the energy of the crash turns into matter. New particles are made out of pure energy!",
+    "A neutrino is so shy that it can fly straight through the whole detector — and through the whole Earth — <strong>without anyone seeing it</strong>.",
+    "Only about <strong>20 protons in a billion</strong> crash when two beams pass. That is why the beams go round <strong>11,000 times a second</strong>.",
+    "The particle detectors are the size of a cathedral and have <strong>around 100 million sensors</strong> that take 40 million photos a second.",
+    "The RF cavities work like <strong>surfing a wave</strong>: protons ride the electric wave and get pushed faster every lap."
+  ];
+
+  /* ---- state ---- */
+  var state = {
+    running: false,
+    time: 0,
+    particles: [],          // {beam:0|1, angle, energy, escaping, esc:{x,y,vx,vy,age}}
+    products: [],           // collision debris
+    losses: 0,
+    collisions: 0,
+    lastCollisionT: -99,
+    forceCollision: false,
+    history: [],            // {t, a, b}
+    lastSample: -1,
+    factIndex: 0
+  };
+
+  var flash = 0;            // detector flash brightness, decays every frame
+
+  var ctrl = {
+    mag: 1.00,              // 0.10 .. 1.00
+    rf: 0.80,               // 0 .. 1.00
+    n: 12
+  };
+
+  var opt = { real: false, labels: true, sound: false, table: false };
+
+  /* =================================================================
+   *  1. Canvas
+   * ================================================================= */
+  var canvas = $("ring"), ctx = canvas.getContext("2d");
+  var css = getComputedStyle(document.documentElement);
+  function tok(name, fallback) {
+    var v = css.getPropertyValue(name).trim();
+    return v || fallback;
+  }
+  var C = {};                       // resolved colour tokens, refreshed on theme change
+  function refreshColours() {
+    css = getComputedStyle(document.documentElement);
+    C = {
+      surface:  tok("--surface-1", "#1a1a19"),
+      ink:      tok("--text-primary", "#fff"),
+      ink2:     tok("--text-secondary", "#c3c2b7"),
+      muted:    tok("--text-muted", "#898781"),
+      grid:     tok("--gridline", "#2c2c2a"),
+      base:     tok("--baseline", "#383835"),
+      a:        tok("--beam-a", "#3987e5"),
+      b:        tok("--beam-b", "#d95926"),
+      hadron:   tok("--p-hadron", "#199e70"),
+      muon:     tok("--p-muon", "#9085e9"),
+      electron: tok("--p-electron", "#c98500"),
+      photon:   tok("--p-photon", "#f2f1ea"),
+      neutrino: tok("--p-neutrino", "#898781"),
+      serious:  tok("--serious", "#ec835a"),
+      critical: tok("--critical", "#d03b3b"),
+      good:     tok("--good", "#0ca30c")
+    };
+  }
+  refreshColours();
+  if (window.matchMedia) {
+    try {
+      window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", refreshColours);
+    } catch (e) { /* older browsers: colours just stay as first resolved */ }
+  }
+
+  var DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  function sizeCanvas() {
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(320, rect.width), h = Math.round(w * 0.86);
+    canvas.width = Math.round(w * DPR);
+    canvas.height = Math.round(h * DPR);
+    canvas.style.height = h + "px";
+  }
+  sizeCanvas();
+  // observe the parent: resizing the canvas itself would re-trigger the observer
+  if (window.ResizeObserver && canvas.parentNode) { new ResizeObserver(sizeCanvas).observe(canvas.parentNode); }
+  else { window.addEventListener("resize", sizeCanvas); }
+
+  function geo() {
+    var w = canvas.width / DPR, h = canvas.height / DPR;
+    return { w: w, h: h, cx: w / 2, cy: h / 2 + 12, r: Math.min(w / 2, h / 2) - 62 };
+  }
+
+  /* =================================================================
+   *  2. Physics
+   * ================================================================= */
+  function newParticle(beam, angle, energy) {
+    return { beam: beam, angle: angle, energy: energy, escaping: false, esc: null };
+  }
+  function resetParticles() {
+    state.particles = [];
+    for (var b = 0; b < 2; b++) {
+      for (var i = 0; i < ctrl.n; i++) {
+        state.particles.push(newParticle(b, (i / ctrl.n) * Math.PI * 2, E_INJECT));
+      }
+    }
+  }
+
+  // Visual lap speed is log-mapped so the speed-up is actually visible
+  // (in reality a 450 GeV proton is already at 99.9998% of light speed).
+  function energyFrac(e) {
+    return (Math.log(e) - Math.log(E_INJECT)) / (Math.log(E_MAX) - Math.log(E_INJECT));
+  }
+  function angularSpeed(e) {
+    var f = energyFrac(e);
+    return (reduceMotion ? 0.35 : 0.55) + f * (reduceMotion ? 1.1 : 2.4); // rad/s
+  }
+  function speedOfLightPct(e) {
+    var beta = Math.sqrt(1 - (M_PROTON / (e + M_PROTON)) * (M_PROTON / (e + M_PROTON)));
+    return beta * 100;
+  }
+  // p = qBr → the field needed grows in proportion to the beam energy.
+  function magnetNeeded(e) { return e / E_MAX; }
+
+  /* Signed angle normalised into (-PI, PI] */
+  function normAng(a) {
+    while (a > Math.PI) a -= Math.PI * 2;
+    while (a <= -Math.PI) a += Math.PI * 2;
+    return a;
+  }
+  /* Did the arc travelled from a0 to a1 pass over `target`?
+     (A fast proton can jump clean over a narrow window in one frame,
+     so we test the arc, not the position.) */
+  function crossed(a0, a1, target) {
+    var d = normAng(a1 - a0), t = normAng(target - a0);
+    return d > 0 ? (t > 0 && t <= d) : (t < 0 && t >= d);
+  }
+
+  function step(dt) {
+    state.time += dt;
+
+    var i, p;
+    var crossedAtDetector = { 0: false, 1: false };
+    var boost = state.forceCollision ? 2.6 : 1;
+
+    for (i = 0; i < state.particles.length; i++) {
+      p = state.particles[i];
+
+      if (p.escaping) {                       // fly off along the tangent, then re-inject
+        p.esc.age += dt;
+        p.esc.x += p.esc.vx * dt;
+        p.esc.y += p.esc.vy * dt;
+        p.esc.vx *= 0.985; p.esc.vy *= 0.985;
+        if (p.esc.age > 1.4) {
+          p.escaping = false; p.esc = null;
+          p.angle = DETECTOR_ANGLE + (p.beam === 0 ? 0.35 : -0.35);
+          p.energy = E_INJECT;
+        }
+        continue;
+      }
+
+      var a0 = p.angle;
+      p.angle += angularSpeed(p.energy) * dt * boost * (p.beam === 0 ? 1 : -1);
+      p.angle = normAng(p.angle);
+
+      // RF kick each time the proton passes a cavity (2 cavities, at 0 and PI)
+      if (crossed(a0, p.angle, 0) || crossed(a0, p.angle, Math.PI)) {
+        p.energy = Math.min(E_MAX, p.energy + 620 * ctrl.rf);
+      }
+
+      if (crossed(a0, p.angle, DETECTOR_ANGLE)) crossedAtDetector[p.beam] = true;
+
+      // Not enough magnet → the beam cannot be bent tightly enough → loss
+      if (ctrl.mag < magnetNeeded(p.energy) - 0.02) {
+        p.escaping = true;
+        state.losses++;
+        var g = geo(), pos = polar(g, p.angle, g.r);
+        var tan = p.beam === 0 ? p.angle + Math.PI / 2 : p.angle - Math.PI / 2;
+        p.esc = { x: pos.x, y: pos.y, vx: Math.cos(tan) * 130, vy: Math.sin(tan) * 130, age: 0 };
+      }
+    }
+
+    // A collision needs a proton from EACH beam crossing the detector together
+    if (crossedAtDetector[0] && crossedAtDetector[1] &&
+        state.time - state.lastCollisionT > 1.2) {
+      var pa = nearestTo(DETECTOR_ANGLE, 0), pb = nearestTo(DETECTOR_ANGLE, 1);
+      if (pa && pb && (state.forceCollision || Math.random() < 0.35)) collide(pa, pb);
+    }
+
+    // debris
+    for (i = state.products.length - 1; i >= 0; i--) {
+      var d = state.products[i];
+      d.age += dt;
+      d.x += d.vx * dt; d.y += d.vy * dt;
+      d.vx *= 0.975; d.vy *= 0.975;
+      if (d.age > d.life) state.products.splice(i, 1);
+    }
+  }
+
+  function angDist(a, b) {
+    var d = Math.abs(a - b) % (Math.PI * 2);
+    return d > Math.PI ? Math.PI * 2 - d : d;
+  }
+  function nearestTo(angle, beam) {
+    var best = null, bestD = 1e9;
+    for (var i = 0; i < state.particles.length; i++) {
+      var p = state.particles[i];
+      if (p.beam !== beam || p.escaping) continue;
+      var d = angDist(p.angle, angle);
+      if (d < bestD) { bestD = d; best = p; }
+    }
+    return best;
+  }
+
+  function collide(pa, pb) {
+    state.collisions++;
+    state.lastCollisionT = state.time;
+    state.forceCollision = false;
+
+    var g = geo();
+    var pos = polar(g, DETECTOR_ANGLE, g.r);
+    var types = makeProducts(reduceMotion ? 4 : 6 + Math.floor(Math.random() * 4));
+    for (var i = 0; i < types.length; i++) {
+      var t = types[i], ang = Math.random() * Math.PI * 2;
+      var sp = (t.name === "neutrino" ? 260 : t.name === "muon" ? 230 : 150) * (0.7 + Math.random() * 0.6);
+      state.products.push({
+        type: t, x: pos.x, y: pos.y,
+        vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+        age: 0, life: t.name === "neutrino" ? 1.9 : 1.4
+      });
+    }
+    flash = reduceMotion ? 0 : 0.34;
+
+    var counts = {};
+    types.forEach(function (t) { counts[t.name] = (counts[t.name] || 0) + 1; });
+    addLog(state.collisions, counts);
+    updateLog();
+    announce("Collision " + state.collisions + ". " + logWords(counts));
+    if (state.collisions % 3 === 1) rotateFact();
+    ping();
+  }
+
+  var TYPES = [
+    { name: "hadron",   w: 5 },
+    { name: "muon",     w: 2 },
+    { name: "electron", w: 2 },
+    { name: "photon",   w: 2 },
+    { name: "neutrino", w: 1 }
+  ];
+  function makeProducts(n) {
+    // at least one photon and one neutrino, so the "unseen escape" story always shows
+    var out = [TYPES[3], TYPES[4]];
+    var total = TYPES.reduce(function (s, t) { return s + t.w; }, 0);
+    for (var i = 0; i < n; i++) {
+      var r = Math.random() * total;
+      for (var j = 0; j < TYPES.length; j++) {
+        r -= TYPES[j].w;
+        if (r <= 0) { out.push(TYPES[j]); break; }
+      }
+    }
+    return out;
+  }
+
+  /* =================================================================
+   *  3. Drawing
+   * ================================================================= */
+  function polar(g, angle, r) {
+    return { x: g.cx + Math.cos(angle) * r, y: g.cy + Math.sin(angle) * r };
+  }
+
+  function draw() {
+    var g = geo();
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, g.w, g.h);
+
+    drawPipe(g);
+    drawMagnets(g);
+    drawRF(g);
+    drawDetector(g, flash);
+    drawProducts(g);
+    drawBeams(g);
+    if (opt.labels) drawLabels(g);
+
+    flash = Math.max(0, flash - 0.028);
+  }
+
+  function drawPipe(g) {
+    ctx.save();
+    // the beam pipe: two thin walls, gap between them is the vacuum
+    ctx.strokeStyle = C.base;
+    ctx.lineWidth = 1.25;
+    ctx.beginPath(); ctx.arc(g.cx, g.cy, g.r + 13, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(g.cx, g.cy, g.r - 13, 0, Math.PI * 2); ctx.stroke();
+    // the two beam lanes
+    ctx.strokeStyle = C.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(g.cx, g.cy, g.r - 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(g.cx, g.cy, g.r + 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawMagnets(g) {
+    var i, a;
+    for (i = 0; i < 8; i++) {
+      a = -Math.PI / 2 + (i + 0.5) * (Math.PI * 2 / 8);
+      if (a > Math.PI) a -= Math.PI * 2;
+      if (Math.abs(angDist(a, DETECTOR_ANGLE)) < 0.25) continue;   // detector takes that slot
+      if (Math.abs(angDist(a, 0)) < 0.3) continue;                 // RF cavities take those
+      var pos = polar(g, a, g.r);
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.rotate(a + Math.PI / 2);
+      // the dipole: strength shown by how solid the fill is
+      var str = ctrl.mag;
+      ctx.fillStyle = C.surface;
+      ctx.strokeStyle = C.base;
+      ctx.lineWidth = 1.25;
+      roundRect(-15, -11, 30, 22, 5);
+      ctx.fill(); ctx.stroke();
+      ctx.globalAlpha = 0.25 + 0.75 * str;
+      ctx.fillStyle = str > 0.9 ? C.good : (str > 0.6 ? C.a : C.serious);
+      roundRect(-11, -7, 22, 14, 3);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+  }
+
+  function drawRF(g) {
+    [0, Math.PI].forEach(function (a) {
+      var pos = polar(g, a, g.r);
+      var pulse = 0;
+      for (var i = 0; i < state.particles.length; i++) {
+        var p = state.particles[i];
+        if (!p.escaping && angDist(p.angle, a) < 0.12) { pulse = 1; break; }
+      }
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.rotate(a);
+      ctx.fillStyle = C.surface;
+      ctx.strokeStyle = C.base;
+      ctx.lineWidth = 1.25;
+      roundRect(-16, -26, 32, 52, 6);
+      ctx.fill(); ctx.stroke();
+      if (ctrl.rf > 0) {
+        ctx.globalAlpha = 0.3 + 0.5 * ctrl.rf + (pulse ? 0.25 : 0);
+        ctx.fillStyle = C.b;
+        roundRect(-11, -21, 22, 42, 4);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      ctx.fillStyle = C.ink2;
+      ctx.font = "600 11px " + "system-ui, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("RF", 0, 0);
+      ctx.restore();
+    });
+  }
+
+  function drawDetector(g, f) {
+    var pos = polar(g, DETECTOR_ANGLE, g.r);
+    ctx.save();
+    ctx.translate(pos.x, pos.y);
+    // barrel shape
+    ctx.fillStyle = C.surface;
+    ctx.strokeStyle = C.base;
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    ctx.moveTo(-30, 18); ctx.lineTo(-20, -20); ctx.lineTo(20, -20); ctx.lineTo(30, 18);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = C.grid;
+    for (var i = -1; i <= 1; i++) {
+      ctx.beginPath(); ctx.moveTo(i * 10, 16); ctx.lineTo(i * 7, -17); ctx.stroke();
+    }
+    if (f > 0) {
+      ctx.globalAlpha = f;
+      ctx.fillStyle = C.photon;
+      ctx.beginPath(); ctx.arc(0, 0, 26 + (0.34 - f) * 90, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.fillStyle = C.ink2;
+    ctx.font = "600 11px system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText("DETECTOR", 0, -26);
+    ctx.restore();
+  }
+
+  function drawBeams(g) {
+    var i, p, pos, lane;
+    for (i = 0; i < state.particles.length; i++) {
+      p = state.particles[i];
+      lane = p.beam === 0 ? g.r - 4 : g.r + 4;
+      var col = p.beam === 0 ? C.a : C.b;
+
+      if (p.escaping) {
+        var age = p.esc.age / 1.4;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1 - age);
+        ctx.fillStyle = C.serious;
+        ctx.beginPath(); ctx.arc(p.esc.x, p.esc.y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = Math.max(0, 0.7 - age);
+        ctx.strokeStyle = C.serious;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(p.esc.x - 8, p.esc.y - 8); ctx.lineTo(p.esc.x + 8, p.esc.y + 8);
+        ctx.moveTo(p.esc.x + 8, p.esc.y - 8); ctx.lineTo(p.esc.x - 8, p.esc.y + 8); ctx.stroke();
+        ctx.restore();
+        continue;
+      }
+
+      pos = polar(g, p.angle, lane);
+      // short trail
+      var dir = p.beam === 0 ? 1 : -1;
+      var tail = polar(g, p.angle - dir * 0.09, lane);
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(tail.x, tail.y); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+      ctx.restore();
+      // proton: 10px dot with a 2px surface ring
+      ctx.save();
+      ctx.fillStyle = col;
+      ctx.strokeStyle = C.surface;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawProducts(g) {
+    var t2col = {
+      hadron: C.hadron, muon: C.muon, electron: C.electron,
+      photon: C.photon, neutrino: C.neutrino
+    };
+    for (var i = 0; i < state.products.length; i++) {
+      var d = state.products[i];
+      var a = Math.max(0, 1 - d.age / d.life);
+      var col = t2col[d.type.name] || C.ink2;
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.strokeStyle = col;
+      ctx.fillStyle = col;
+      ctx.lineWidth = 2; ctx.lineCap = "round";
+      var tx = d.x - d.vx * 0.06, ty = d.y - d.vy * 0.06;
+      if (d.type.name === "neutrino") {
+        ctx.setLineDash([4, 5]); ctx.lineWidth = 1.5;
+      }
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(d.x, d.y); ctx.stroke();
+      if (d.type.name !== "photon" && d.type.name !== "neutrino") {
+        ctx.beginPath(); ctx.arc(d.x, d.y, 4, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawLabels(g) {
+    ctx.save();
+    ctx.fillStyle = C.muted;
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    var pos = polar(g, Math.PI * 0.75, g.r + 24);
+    ctx.fillText("bending magnets", pos.x, pos.y + 8);
+    ctx.restore();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  /* =================================================================
+   *  4. Readouts, meter, chart, log
+   * ================================================================= */
+  function meanEnergy(beam) {
+    var s = 0, n = 0;
+    for (var i = 0; i < state.particles.length; i++) {
+      var p = state.particles[i];
+      if (p.beam !== beam || p.escaping) continue;
+      s += p.energy; n++;
+    }
+    return n ? s / n : E_INJECT;
+  }
+
+  function fmtGeV(v, real) {
+    if (real && v >= 1000) return (v / 1000).toFixed(v >= 5000 ? 2 : 1) + " TeV";
+    return Math.round(v).toLocaleString("en-GB") + " GeV";
+  }
+
+  /* Elements touched every frame — cache them once. */
+  var UI = {
+    energy: $("tEnergy"), energyUnit: $("tEnergyUnit"),
+    speed: $("tSpeed"), speedNote: $("tSpeedNote"),
+    coll: $("tColl"), loss: $("tLoss"),
+    magNeed: $("magNeedTxt"), magFill: $("magFill"), magMeter: $("magMeter"),
+    magState: $("magState"), magIco: $("magState").querySelector(".ico"),
+    magTxt: $("magStateTxt")
+  };
+
+  function updateReadouts() {
+    var ea = meanEnergy(0), eb = meanEnergy(1), e = (ea + eb) / 2;
+    var energyStr = fmtGeV(e, opt.real);
+    UI.energy.textContent = energyStr.replace(/ (GeV|TeV)$/, "");
+    UI.energyUnit.textContent = (energyStr.match(/(GeV|TeV)$/) || ["GeV"])[0];
+
+    var pct = speedOfLightPct(e);
+    UI.speed.textContent = opt.real ? pct.toFixed(8) : pct.toFixed(2);
+    UI.speedNote.textContent = opt.real
+      ? "9 nines — and still not quite 100%"
+      : "almost as fast as anything can go";
+
+    UI.coll.textContent = state.collisions;
+    UI.loss.textContent = state.losses;
+
+    // magnet meter — the fill carries severity, the icon + words carry the meaning
+    var need = magnetNeeded(e);
+    var over = ctrl.mag < need - 0.02;
+    var close = !over && ctrl.mag < need + 0.06;
+    UI.magNeed.textContent = Math.round(need * 100) + "%";
+    UI.magFill.style.width = Math.min(100, need * 100) + "%";
+    UI.magMeter.classList.toggle("crit", over);
+    UI.magMeter.classList.toggle("warn", close);
+    UI.magState.style.color = over ? "var(--critical)" : close ? "var(--warning)" : "var(--text-secondary)";
+    if (over)       { UI.magIco.textContent = "⚠"; UI.magTxt.textContent = "Too weak — protons are flying off the ring"; }
+    else if (close) { UI.magIco.textContent = "⚠"; UI.magTxt.textContent = "Nearly at the limit — turn the magnets up"; }
+    else            { UI.magIco.textContent = "✓"; UI.magTxt.textContent = "Magnets are strong enough"; }
+  }
+
+  /* ---- history + chart ---- */
+  function sample() {
+    state.history.push({ t: state.time, a: meanEnergy(0), b: meanEnergy(1) });
+    var cutoff = state.time - WINDOW_S;
+    while (state.history.length && state.history[0].t < cutoff - 1) state.history.shift();
+    renderChart();
+  }
+
+  var chartW = 520, chartH = 216;
+  var M = { l: 52, r: 46, t: 10, b: 26 };
+
+  function renderChart() {
+    var svg = $("energychart");
+    var box = svg.getBoundingClientRect();
+    if (box.width > 0) chartW = Math.round(box.width);
+    chartH = 216;
+    svg.setAttribute("viewBox", "0 0 " + chartW + " " + chartH);
+
+    var h = state.history;
+    var ns = "http://www.w3.org/2000/svg";
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    function el(name, attrs, text) {
+      var n = document.createElementNS(ns, name);
+      for (var k in attrs) n.setAttribute(k, attrs[k]);
+      if (text != null) n.textContent = text;
+      svg.appendChild(n);
+      return n;
+    }
+
+    var iw = chartW - M.l - M.r, ih = chartH - M.t - M.b;
+    var t0 = state.time - WINDOW_S;
+    function X(t) { return M.l + ((t - t0) / WINDOW_S) * iw; }
+    function Y(v) { return M.t + ih - (v / E_MAX) * ih; }
+
+    // y grid: 0 / 2000 / 4000 / 6000 GeV — solid hairlines, recessive
+    [0, 2000, 4000, 6000].forEach(function (v) {
+      el("line", { x1: M.l, x2: M.l + iw, y1: Y(v), y2: Y(v),
+                   stroke: v === 0 ? C.base : C.grid, "stroke-width": 1 });
+      el("text", { x: M.l - 8, y: Y(v) + 4, "text-anchor": "end", fill: C.muted,
+                   "font-size": 11, style: "font-variant-numeric:tabular-nums" },
+         v.toLocaleString("en-GB"));
+    });
+    // x ticks: seconds ago
+    [60, 40, 20, 0].forEach(function (s) {
+      var x = X(state.time - s);
+      if (x < M.l - 0.5) return;
+      el("text", { x: x, y: M.t + ih + 16, "text-anchor": s === 0 ? "end" : "middle",
+                   fill: C.muted, "font-size": 11, style: "font-variant-numeric:tabular-nums" },
+         s === 0 ? "now" : "−" + s + "s");
+    });
+
+    // series (2px, round joins) — colour follows the beam, never the rank
+    [["a", C.a], ["b", C.b]].forEach(function (s) {
+      var pts = h.filter(function (d) { return d.t >= t0 - 0.01; });
+      if (pts.length < 2) return;
+      var dAttr = pts.map(function (d, i) {
+        return (i ? "L" : "M") + X(d.t).toFixed(1) + " " + Y(d[s[0]]).toFixed(1);
+      }).join(" ");
+      el("path", { d: dAttr, fill: "none", stroke: s[1], "stroke-width": 2,
+                   "stroke-linejoin": "round", "stroke-linecap": "round" });
+      // selective direct label: the current value at the line end
+      var last = pts[pts.length - 1];
+      el("circle", { cx: X(last.t), cy: Y(last[s[0]]), r: 4, fill: s[1], stroke: C.surface, "stroke-width": 2 });
+      el("text", { x: X(last.t) + 7, y: Y(last[s[0]]) + 4, fill: C.ink2, "font-size": 11,
+                   "font-weight": 600, style: "font-variant-numeric:tabular-nums" },
+         Math.round(last[s[0]]).toLocaleString("en-GB"));
+    });
+  }
+
+  /* crosshair + tooltip: the hit target is the whole plot, never the 2px line */
+  var hit = $("chartHit"), tip = $("chartTip"), crossIdx = -1;
+  function showCross(px) {
+    var h = state.history;
+    if (h.length < 2) return;
+    var box = $("energychart").getBoundingClientRect();
+    var relX = px != null ? px : chartW / 2;
+    var t0 = state.time - WINDOW_S;
+    var iw = chartW - M.l - M.r;
+    var t = t0 + ((relX - M.l) / iw) * WINDOW_S;
+    var best = 0, bd = 1e9;
+    for (var i = 0; i < h.length; i++) {
+      var d = Math.abs(h[i].t - t);
+      if (d < bd) { bd = d; best = i; }
+    }
+    crossIdx = best;
+    var rec = h[best];
+    var x = M.l + ((rec.t - t0) / iw) * iw;
+    var svg = $("energychart"), ns = "http://www.w3.org/2000/svg";
+    var old = svg.querySelector(".cross");
+    if (old) old.parentNode.removeChild(old);
+    var ln = document.createElementNS(ns, "line");
+    ln.setAttribute("class", "cross");
+    ln.setAttribute("x1", x); ln.setAttribute("x2", x);
+    ln.setAttribute("y1", M.t); ln.setAttribute("y2", chartH - M.b);
+    ln.setAttribute("stroke", C.muted); ln.setAttribute("stroke-width", 1);
+    svg.appendChild(ln);
+
+    var ago = Math.max(0, Math.round(state.time - rec.t));
+    tip.innerHTML = "";
+    function row(colour, name, value) {
+      var r = document.createElement("div"); r.className = "row";
+      var k = document.createElement("span"); k.className = "key"; k.style.background = colour;
+      var v = document.createElement("span"); v.className = "v"; v.textContent = value;
+      var n = document.createElement("span"); n.className = "n"; n.textContent = name;
+      r.appendChild(k); r.appendChild(v); r.appendChild(n);
+      tip.appendChild(r);
+    }
+    var hd = document.createElement("div"); hd.className = "t";
+    hd.textContent = ago === 0 ? "now" : ago + "s ago";
+    tip.appendChild(hd);
+    row(C.a, "Beam A", Math.round(rec.a).toLocaleString("en-GB") + " GeV");
+    row(C.b, "Beam B", Math.round(rec.b).toLocaleString("en-GB") + " GeV");
+    tip.style.display = "block";
+    var tw = tip.offsetWidth;
+    var left = (x / chartW) * box.width + 12;
+    if (left + tw > box.width - 4) left = (x / chartW) * box.width - tw - 12;
+    tip.style.left = Math.max(2, left) + "px";
+    tip.style.top = "8px";
+    void box.width;
+  }
+  function hideCross() {
+    tip.style.display = "none";
+    crossIdx = -1;
+    var old = $("energychart").querySelector(".cross");
+    if (old) old.parentNode.removeChild(old);
+  }
+  hit.addEventListener("pointermove", function (ev) {
+    var r = $("energychart").getBoundingClientRect();
+    showCross(((ev.clientX - r.left) / r.width) * chartW);
+  });
+  hit.addEventListener("pointerleave", hideCross);
+  hit.addEventListener("focus", function () { showCross(); });
+  hit.addEventListener("blur", hideCross);
+  hit.addEventListener("keydown", function (ev) {
+    var h = state.history;
+    if (!h.length) return;
+    if (ev.key === "ArrowLeft" || ev.key === "ArrowRight") {
+      ev.preventDefault();
+      crossIdx = crossIdx < 0 ? h.length - 1
+               : Math.max(0, Math.min(h.length - 1, crossIdx + (ev.key === "ArrowRight" ? 1 : -1)));
+      showCrossAt(crossIdx);
+    }
+  });
+  function showCrossAt(i) {
+    var h = state.history;
+    if (!h[i]) return;
+    var t0 = state.time - WINDOW_S, iw = chartW - M.l - M.r;
+    showCross(M.l + ((h[i].t - t0) / iw) * iw);
+  }
+
+  /* table view — the WCAG-clean twin of the chart */
+  function renderTable() {
+    var wrap = $("tableView");
+    if (!opt.table) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+    var h = state.history.filter(function (d, i) { return i % 4 === 0; });
+    var t = document.createElement("table");
+    t.className = "data";
+    var cap = document.createElement("caption");
+    cap.className = "visually-hidden";
+    cap.textContent = "Beam energy in GeV over the last 60 seconds";
+    t.appendChild(cap);
+    var thead = document.createElement("thead"), tr = document.createElement("tr");
+    ["Time", "Beam A (GeV)", "Beam B (GeV)"].forEach(function (s) {
+      var th = document.createElement("th"); th.scope = "col"; th.textContent = s; tr.appendChild(th);
+    });
+    thead.appendChild(tr); t.appendChild(thead);
+    var tb = document.createElement("tbody");
+    var t0 = state.time - WINDOW_S;
+    h.forEach(function (d) {
+      var r = document.createElement("tr");
+      [Math.max(0, Math.round(d.t - t0)) + "s ago",
+       Math.round(d.a).toLocaleString("en-GB"),
+       Math.round(d.b).toLocaleString("en-GB")].forEach(function (v, i) {
+        var td = document.createElement("td"); td.textContent = v; if (i === 0) td.style.textAlign = "left";
+        r.appendChild(td);
+      });
+      tb.appendChild(r);
+    });
+    t.appendChild(tb);
+    wrap.innerHTML = "";
+    wrap.appendChild(t);
+  }
+
+  /* ---- log ---- */
+  var logEntries = [];
+  function addLog(n, counts) {
+    logEntries.unshift({ n: n, counts: counts });
+    if (logEntries.length > 6) logEntries.pop();
+  }
+  function logWords(counts) {
+    var order = ["muon", "electron", "photon", "hadron", "neutrino"];
+    return order.filter(function (k) { return counts[k]; })
+      .map(function (k) { return counts[k] + " " + k + (counts[k] > 1 ? "s" : ""); })
+      .join(", ");
+  }
+  function updateLog() {
+    var ul = $("log");
+    ul.innerHTML = "";
+    if (!logEntries.length) {
+      var li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "No collisions yet — press Collide now!";
+      ul.appendChild(li);
+      return;
+    }
+    logEntries.forEach(function (e) {
+      var li = document.createElement("li");
+      var n = document.createElement("span"); n.className = "num"; n.textContent = "#" + e.n;
+      var s = document.createElement("span"); s.textContent = logWords(e.counts);
+      li.appendChild(n); li.appendChild(s);
+      ul.appendChild(li);
+    });
+  }
+
+  function announce(msg) { $("live").textContent = msg; }
+  function rotateFact() {
+    state.factIndex = (state.factIndex + 1) % FACTS.length;
+    // safe: these strings are ours, written in the FACTS array above
+    $("fact").innerHTML = FACTS[state.factIndex];
+  }
+
+  /* ---- sound (off by default; created on first user gesture) ---- */
+  var audio = null;
+  function ping() {
+    if (!opt.sound) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audio.createOscillator(), g = audio.createGain();
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, audio.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.14, audio.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.35);
+      o.connect(g); g.connect(audio.destination);
+      o.start(); o.stop(audio.currentTime + 0.36);
+    } catch (e) { /* no audio available — stay silent */ }
+  }
+
+  /* =================================================================
+   *  5. Wiring
+   * ================================================================= */
+  function setRunning(on) {
+    state.running = on;
+    $("btnRun").textContent = on ? "Pause" : "Start";
+    $("runDot").classList.toggle("on", on);
+    $("runText").textContent = on ? "Running — beams are circulating" : "Paused — press Start";
+  }
+
+  $("btnRun").addEventListener("click", function () { setRunning(!state.running); });
+  $("btnSmash").addEventListener("click", function () {
+    if (!state.running) setRunning(true);
+    state.forceCollision = true;
+  });
+  $("btnReset").addEventListener("click", reset);
+
+  function reset() {
+    state.time = 0; state.losses = 0; state.collisions = 0;
+    state.lastCollisionT = -99; state.forceCollision = false;
+    state.products = []; state.history = []; state.lastSample = -1;
+    logEntries = []; updateLog();
+    resetParticles();
+    setRunning(false);
+    renderChart(); renderTable(); updateReadouts();
+    hideCross();
+  }
+
+  $("sMag").addEventListener("input", function () {
+    ctrl.mag = this.value / 100;
+    $("oMag").textContent = this.value + "%";
+  });
+  $("sRF").addEventListener("input", function () {
+    ctrl.rf = this.value / 100;
+    $("oRF").textContent = this.value + "%";
+  });
+  $("sN").addEventListener("input", function () {
+    ctrl.n = parseInt(this.value, 10);
+    $("oN").textContent = this.value;
+    resetParticles();
+  });
+  $("optReal").addEventListener("change", function () { opt.real = this.checked; updateReadouts(); });
+  $("optLabels").addEventListener("change", function () { opt.labels = this.checked; });
+  $("optSound").addEventListener("change", function () { opt.sound = this.checked; });
+  $("btnTable").addEventListener("click", function () {
+    opt.table = !opt.table;
+    this.setAttribute("aria-pressed", String(opt.table));
+    this.textContent = opt.table ? "Chart view" : "Table view";
+    $("energychart").parentNode.style.visibility = opt.table ? "hidden" : "visible";
+    hit.style.display = opt.table ? "none" : "";
+    renderTable();
+  });
+
+  document.addEventListener("keydown", function (ev) {
+    if (ev.target.tagName === "INPUT" || ev.target.tagName === "BUTTON") {
+      if (ev.code !== "Space") return;
+    }
+    if (ev.code === "Space") { ev.preventDefault(); setRunning(!state.running); }
+    else if (ev.key === "c" || ev.key === "C") { $("btnSmash").click(); }
+    else if (ev.key === "r" || ev.key === "R") { reset(); }
+  });
+
+  /* =================================================================
+   *  6. Loop
+   * ================================================================= */
+  var last = null;
+  function frame(ts) {
+    if (last == null) last = ts;
+    var dt = Math.min(0.05, (ts - last) / 1000);
+    last = ts;
+    if (state.running) {
+      step(dt);
+      if (state.time - state.lastSample >= SAMPLE_EVERY) { state.lastSample = state.time; sample(); }
+    }
+    draw();
+    updateReadouts();
+    requestAnimationFrame(frame);
+  }
+
+  resetParticles();
+  state.lastSample = -1;
+  renderChart();
+  updateReadouts();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
