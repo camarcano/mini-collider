@@ -11,6 +11,29 @@ winding the coils, and firing both beams at the same moment.
 parts, ready to drop into your slicer). Or take them individually below.
 Each `.stl` downloads when you click it.
 
+## Print plates: fewer print jobs
+
+Dropping thirty separate STLs into a slicer means thirty rounds of
+arranging. The `stl/plates/` folder does the arranging for you — each file
+is a full bed of parts, already spaced 6 mm apart, everything still lying
+flat with no supports. Print one file per job:
+
+| Plate | Contents | Bed used |
+|---|---|---|
+| `plate_1_track_clipx24_coil_mandrelx1.stl` | 24 track clips + the mandrel | 208 × 140 mm |
+| `plate_2_track_clipx6_detector_ringx3_gate_shutterx2_ball_gatex2.stl` | remaining 6 clips, all 3 rings, both gates, both shutters | 190 × 210 mm |
+| `plate_3_catch_funnelx1.stl` | the funnel (it is 110 mm across — it likes its own plate) | 110 × 110 mm |
+
+Plates are laid out for a **220 × 220 mm** bed. If yours is bigger — a
+Bambu is 256 × 256 — regenerate tighter plates with:
+
+```
+python3 make_plates.py --bed 256 256
+```
+
+Run `make_plates.py` after `generate_stls.py` whenever part dimensions
+change: plates are derived from the STLs and are not rebuilt automatically.
+
 ## The parts
 
 | Download | What it is | Print | Helps step |
